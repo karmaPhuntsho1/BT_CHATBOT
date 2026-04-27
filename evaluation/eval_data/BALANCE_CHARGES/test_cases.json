@@ -1,0 +1,20 @@
+{
+  "domain": "BALANCE_CHARGES",
+  "description": "Balance deduction, unexpected charges, data usage disputes.",
+  "cases": [
+    {
+      "id": "bal-01",
+      "user_input": "My balance was deducted without reason",
+      "expected_intent": "rag",
+      "expected_method": "rag",
+      "flexible": true
+    },
+    {
+      "id": "bal-02",
+      "user_input": "Money gone from my account deduction",
+      "expected_intent": "rag",
+      "expected_method": "rag",
+      "flexible": true
+    }
+  ]
+}

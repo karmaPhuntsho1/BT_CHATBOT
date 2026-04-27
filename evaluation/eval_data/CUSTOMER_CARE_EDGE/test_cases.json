@@ -1,0 +1,27 @@
+{
+  "domain": "CUSTOMER_CARE_EDGE",
+  "description": "Greeting, empty input, noisy text \u2014 behaviour and safe fallback.",
+  "cases": [
+    {
+      "id": "edge-01",
+      "user_input": "hello there",
+      "expected_intent": "rag",
+      "expected_method": "rag",
+      "flexible": true
+    },
+    {
+      "id": "edge-02",
+      "user_input": "",
+      "expected_intent": "rag",
+      "expected_method": "rag",
+      "flexible": true
+    },
+    {
+      "id": "edge-03",
+      "user_input": "asdfgh qwerty zzz",
+      "expected_intent": "rag",
+      "expected_method": "rag",
+      "flexible": true
+    }
+  ]
+}
