@@ -4,7 +4,7 @@
 
 Confirm you see **`requirements.txt`** in the current directory (`ls` on Linux/macOS, `dir` on Windows). This repository uses **`Bt_chatbot`** as the project root (there is no extra nested `bt_chatbot` folder after clone).
 
-**Step  — Create a Python virtual environment**
+**Step 1 and 2— Create a Python virtual environment**
 
 ```bash
 python3 -m venv .venv

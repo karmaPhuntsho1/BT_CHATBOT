@@ -551,6 +551,7 @@
     })();
     const API = (window.__BT_API_BASE || "") + "/chat";
     const FEEDBACK_API = (window.__BT_API_BASE || "") + "/feedback";
+    const REACTION_API = (window.__BT_API_BASE || "") + "/reaction";
     const STORAGE_KEY = "bt-chat-history-v2";
     const chat = document.getElementById("chat");
     const messageEl = document.getElementById("message");
@@ -665,7 +666,7 @@
       chat.appendChild(screen);
     }
 
-    function createMessageRow(role, text, metaTime, method, rating) {
+    function createMessageRow(role, text, metaTime, method, rating, reaction, messageId) {
       const row = document.createElement("div");
       row.className = "message-row " + role;
       let botActions = null;
@@ -715,14 +716,22 @@
         copyBtn.setAttribute("aria-label", "Copy response");
         copyBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path></svg>';
 
-        likeBtn.addEventListener("click", () => {
+        if (reaction === "like") {
+          likeBtn.classList.add("active");
+        } else if (reaction === "unlike") {
+          unlikeBtn.classList.add("active");
+        }
+
+        likeBtn.addEventListener("click", async () => {
           likeBtn.classList.add("active");
           unlikeBtn.classList.remove("active");
+          await handleReaction(messageId, "like");
         });
 
-        unlikeBtn.addEventListener("click", () => {
+        unlikeBtn.addEventListener("click", async () => {
           unlikeBtn.classList.add("active");
           likeBtn.classList.remove("active");
+          await handleReaction(messageId, "unlike");
         });
 
         copyBtn.addEventListener("click", async () => {
@@ -758,6 +767,29 @@
       return row;
     }
 
+    async function handleReaction(messageId, reaction) {
+      const conversation = getActiveConversation();
+      const message = conversation.messages.find((item) => item.id === messageId);
+      if (!message) return;
+
+      message.reaction = reaction;
+      saveConversations();
+
+      try {
+        await fetch(REACTION_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: conversation.id,
+            message_id: messageId,
+            reaction,
+          }),
+        });
+      } catch (e) {
+        console.warn("Could not save reaction", e);
+      }
+    }
+
     function renderConversation() {
       const conversation = getActiveConversation();
       chat.innerHTML = "";
@@ -770,7 +802,9 @@
           message.text,
           formatTime(message.timestamp),
           message.method,
-          message.rating
+          message.rating,
+          message.reaction,
+          message.id
         );
         row.dataset.messageId = message.id;
         chat.appendChild(row);
@@ -794,7 +828,8 @@
         text,
         method: method || "",
         timestamp: new Date().toISOString(),
-        rating: 0
+        rating: 0,
+        reaction: null
       };
 
       if (role === "user" && conversation.messages.length === 0) {
@@ -805,7 +840,15 @@
       conversation.updatedAt = message.timestamp;
       saveConversations();
 
-      const row = createMessageRow(role, text, formatTime(message.timestamp), method, message.rating);
+      const row = createMessageRow(
+        role,
+        text,
+        formatTime(message.timestamp),
+        method,
+        message.rating,
+        message.reaction,
+        message.id
+      );
       row.dataset.messageId = message.id;
       chat.appendChild(row);
       scrollChatToBottom();

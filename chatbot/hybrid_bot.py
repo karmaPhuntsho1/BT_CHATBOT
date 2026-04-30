@@ -44,6 +44,17 @@ def _init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reactions (
+                session_id TEXT NOT NULL,
+                message_id TEXT NOT NULL,
+                reaction TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                UNIQUE(session_id, message_id)
+            )
+            """
+        )
         conn.commit()
     finally:
         conn.close()

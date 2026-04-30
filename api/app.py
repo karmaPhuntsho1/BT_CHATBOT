@@ -5,6 +5,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+from typing import Literal
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -38,6 +40,12 @@ class ChatIn(BaseModel):
 class FeedbackIn(BaseModel):
     session_id: str
     rating: int = Field(..., ge=1, le=5)
+
+
+class ReactionIn(BaseModel):
+    session_id: str
+    message_id: str
+    reaction: Literal["like", "unlike"]
 
 
 @app.get("/")
@@ -78,6 +86,27 @@ def feedback(body: FeedbackIn):
         conn.execute(
             "INSERT INTO feedback (session_id, rating, timestamp) VALUES (?, ?, ?)",
             (body.session_id, body.rating, datetime.now(timezone.utc).isoformat()),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True}
+
+
+@app.post("/reaction")
+def reaction(body: ReactionIn):
+    from datetime import datetime, timezone
+
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO reactions (session_id, message_id, reaction, timestamp) VALUES (?, ?, ?, ?)",
+            (
+                body.session_id,
+                body.message_id,
+                body.reaction,
+                datetime.now(timezone.utc).isoformat(),
+            ),
         )
         conn.commit()
     finally:
